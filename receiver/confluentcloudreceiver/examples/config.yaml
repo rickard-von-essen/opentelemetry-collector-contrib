@@ -1,0 +1,41 @@
+extensions:
+  basicauth:
+    client_auth: 
+      username: <API Key>
+      password: <API Secret>
+
+receivers:
+  confluentcloud:
+    auth:
+      authenticator: basicauth
+    resources:
+      kafka:
+        - <kafka id>
+    filter:
+      include:
+        - ".*/sent_bytes"
+
+  influxdb:
+    endpoint: "0.0.0.0:8080"
+
+processors:
+
+exporters:
+  logging:
+    verbosity: detailed
+  prometheus:
+    endpoint: "0.0.0.0:9300"
+    send_timestamps: true
+    metric_expiration: 25m
+
+service:
+  extensions: [basicauth]
+  pipelines:
+    metrics:
+      receivers: [influxdb, confluentcloud]
+      processors: []
+      exporters: [logging, prometheus]
+  telemetry:
+    logs:
+      development: true
+      level: debug
